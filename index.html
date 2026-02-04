@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FluxWallet Pro</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+<div class="ambient-light">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<div class="app-container">
+  
+  <header class="glass-header">
+    <div class="header-content">
+      <div class="brand">
+        <i class="ph-fill ph-wallet"></i>
+        <span>Jeeva FluxWallet</span>
+      </div>
+      
+      <button id="syncBtn" class="sync-badge" onclick="syncData()" style="display: none;">
+        <i class="ph-bold ph-arrows-clockwise"></i>
+        <span id="pendingCount">0</span>
+      </button>
+
+      <div class="status-indicator" id="connectionStatus">
+        <span class="dot"></span> <span id="statusText">Online</span>
+      </div>
+    </div>
+    <h1>New Transaction</h1>
+  </header>
+
+  <form id="expenseForm" class="glass-form">
+    
+    <div class="input-group hero-group">
+      <label>Amount</label>
+      <div class="amount-wrapper">
+        <span class="currency-symbol">₹</span>
+        <input type="number" id="amount" placeholder="0" inputmode="decimal" required>
+      </div>
+    </div>
+
+    <div class="grid-row">
+      <div class="input-group">
+        <label><i class="ph ph-calendar-blank"></i> Date</label>
+        <input type="date" id="date" required>
+      </div>
+      <div class="input-group">
+        <label><i class="ph ph-clock"></i> Time</label>
+        <input type="time" id="time" required>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label><i class="ph ph-tag"></i> Category</label>
+      <div class="select-wrapper">
+        <select id="category" required>
+          <option value="" disabled selected>Select Category</option>
+          <option>Groceries</option>
+          <option>Dining Out</option>
+          <option>Transportation (Fuel/Public Transport)</option>
+          <option>Utilities (Rent/Electricity/Water)</option>
+          <option>Entertainment</option>
+          <option>Shopping (Clothes/Electronics)</option>
+          <option>Health & Wellness</option>
+          <option>Education</option>
+          <option>Personal Care</option>
+          <option>Travel</option>
+          <option>Gifts/Donations</option>
+          <option>Other</option>
+        </select>
+        <i class="ph ph-caret-down select-icon"></i>
+      </div>
+    </div>
+
+    <div class="grid-row">
+      <div class="input-group">
+        <label><i class="ph ph-credit-card"></i> Method</label>
+        <div class="select-wrapper">
+          <select id="payment" required>
+            <option value="" disabled selected>Select</option>
+            <option>Cash</option>
+            <option>Credit Card</option>
+            <option>Debit Card</option>
+            <option>UPI/Digital Wallet</option>
+            <option>Bank Transfer</option>
+          </select>
+          <i class="ph ph-caret-down select-icon"></i>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label><i class="ph ph-warning-circle"></i> Priority</label>
+        <div class="select-wrapper">
+          <select id="necessity" required>
+            <option value="" disabled selected>Select</option>
+            <option value="Yes, absolutely essential">Essential</option>
+            <option value="Partially necessary/Could have been postponed">Partial</option>
+            <option value="No, impulse purchase/discretionar">Impulse</option>
+          </select>
+          <i class="ph ph-caret-down select-icon"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label><i class="ph ph-notebook"></i> Note</label>
+      <textarea id="description" placeholder="What is this for?" rows="1"></textarea>
+    </div>
+
+    <div class="input-group">
+      <label>Receipt</label>
+      <label for="receiptFile" class="file-upload-btn">
+        <i class="ph ph-camera"></i>
+        <span id="fileName">Attach Photo</span>
+        <input type="file" id="receiptFile" accept="image/*">
+      </label>
+    </div>
+
+    <button type="submit" id="submitBtn">
+      <span class="btn-text">Log Expense</span>
+      <div class="loader"></div>
+    </button>
+  </form>
+</div>
+
+<div id="successModal" class="modal-overlay">
+  <div class="modal-glass">
+    <div class="success-header">
+      <div class="check-circle" id="modalIcon">
+        <i class="ph-bold ph-check"></i>
+      </div>
+      <h2 id="modalTitle">Saved!</h2>
+      <p id="modalSub" style="font-size:12px; opacity:0.7;">Transaction recorded.</p>
+    </div>
+
+    <div id="printableBill" class="receipt-paper">
+      <div class="receipt-header">
+        <h3>RECEIPT</h3>
+        <p id="billDate">--/--/----</p>
+      </div>
+      
+      <div class="receipt-body">
+        <div class="r-row total-row">
+          <span>Amount</span>
+          <span class="highlight" id="billAmount">₹0.00</span>
+        </div>
+        <div class="dashed-line"></div>
+        <div class="r-row"><span>Category</span> <span id="billCategory">--</span></div>
+        <div class="r-row"><span>Payment</span> <span id="billPayment">--</span></div>
+        <div class="r-note" id="billDesc"></div>
+      </div>
+
+      <div id="billImageContainer" class="receipt-image-box" style="display:none;">
+        <img id="billImagePreview" src="" alt="Proof">
+      </div>
+
+      <div class="receipt-footer">
+        <p>Thank you</p>
+        <i class="ph-fill ph-barcode"></i>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button onclick="window.print()" class="action-btn print-btn"><i class="ph ph-printer"></i> Print</button>
+      <button onclick="closeModal()" class="action-btn close-btn">New Entry</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
