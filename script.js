@@ -1,4 +1,4 @@
-// ✅ YOUR EXACT FORM URL
+// ✅ YOUR FORM URL
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc85d9MBB0-2nQ-2yYNYzWhTbMs2_L_TdWJrEznTZpXrdpV0g/formResponse";
 
 const form = document.getElementById("expenseForm");
@@ -11,7 +11,7 @@ const pendingCount = document.getElementById("pendingCount");
 const statusText = document.getElementById("statusText");
 const statusIndicator = document.getElementById("connectionStatus");
 
-// --- 1. Init: Check LocalStorage for pending items ---
+// --- 1. Init: Check LocalStorage ---
 updateSyncUI();
 
 // Default Date/Time
@@ -36,7 +36,7 @@ fileInput.addEventListener('change', function(e) {
   }
 });
 
-// --- 2. Submit Handler (Smart) ---
+// --- 2. Submit Handler ---
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   submitBtn.disabled = true;
@@ -54,17 +54,14 @@ form.addEventListener("submit", async (e) => {
     fileRef: fileInput.files[0] ? `File: ${fileInput.files[0].name}` : ""
   };
 
-  // Prepare FormData for Google
   const formData = createGoogleFormData(rawData);
 
   try {
-    // Attempt Online Send
     await fetch(FORM_URL, { method: "POST", mode: "no-cors", body: formData });
-    showModal(true, rawData); // Success
+    showModal(true, rawData);
   } catch (error) {
-    // If Failed, Save to LocalStorage
     saveOffline(rawData);
-    showModal(false, rawData); // Offline Success
+    showModal(false, rawData);
   } finally {
     submitBtn.disabled = false;
     submitBtn.classList.remove("btn-loading");
@@ -80,28 +77,25 @@ async function syncData() {
   syncBtn.innerHTML = `<div class="loader" style="width:14px;height:14px;border-width:2px;"></div>`;
   
   let successCount = 0;
-  // Loop backwards so we can remove items safely
   for (let i = offlineData.length - 1; i >= 0; i--) {
     const entry = offlineData[i];
     const formData = createGoogleFormData(entry);
     
     try {
       await fetch(FORM_URL, { method: "POST", mode: "no-cors", body: formData });
-      offlineData.splice(i, 1); // Remove from array if success
+      offlineData.splice(i, 1);
       successCount++;
     } catch (err) {
-      console.log("Still offline, skipping...");
+      console.log("Skipping item (still offline)");
     }
   }
 
-  // Save remaining items back to local storage
   localStorage.setItem("offlineExpenses", JSON.stringify(offlineData));
-  
   if (successCount > 0) alert(`Synced ${successCount} transactions!`);
   updateSyncUI();
 }
 
-// --- Helper: Map Data to IDs ---
+// --- Helpers ---
 function createGoogleFormData(data) {
   const [year, month, day] = data.date.split("-");
   const [hour, minute] = data.time.split(":");
@@ -122,17 +116,14 @@ function createGoogleFormData(data) {
   return formData;
 }
 
-// --- Helper: Save Offline ---
 function saveOffline(data) {
   const existing = JSON.parse(localStorage.getItem("offlineExpenses") || "[]");
   existing.push(data);
   localStorage.setItem("offlineExpenses", JSON.stringify(existing));
 }
 
-// --- UI Updates ---
 function updateSyncUI() {
   const count = JSON.parse(localStorage.getItem("offlineExpenses") || "[]").length;
-  
   if (count > 0) {
     syncBtn.style.display = "flex";
     syncBtn.innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> Sync (${count})`;
@@ -140,8 +131,7 @@ function updateSyncUI() {
   } else {
     syncBtn.style.display = "none";
   }
-
-  // Check connection
+  
   if (!navigator.onLine) {
     statusIndicator.classList.add("offline");
     statusText.textContent = "Offline";
@@ -152,7 +142,6 @@ function updateSyncUI() {
 }
 
 function showModal(isOnline, data) {
-  // Update Modal Text based on status
   const title = document.getElementById("modalTitle");
   const sub = document.getElementById("modalSub");
   const icon = document.getElementById("modalIcon");
@@ -167,7 +156,6 @@ function showModal(isOnline, data) {
     icon.classList.add("orange");
   }
 
-  // Populate Bill
   document.getElementById("billAmount").textContent = "₹" + data.amount;
   document.getElementById("billCategory").textContent = data.category;
   document.getElementById("billPayment").textContent = data.payment;
@@ -177,7 +165,6 @@ function showModal(isOnline, data) {
   const billImgContainer = document.getElementById("billImageContainer");
   const billImg = document.getElementById("billImagePreview");
   
-  // Show image if it exists in current session
   if (uploadedImageBase64) {
     billImg.src = uploadedImageBase64;
     billImgContainer.style.display = "block";
@@ -194,12 +181,10 @@ function closeModal() {
   fileNameDisplay.innerHTML = "Attach Photo";
   uploadedImageBase64 = null;
   document.getElementById("billImageContainer").style.display = "none";
-  
   const now = new Date();
   document.getElementById('date').valueAsDate = now;
   document.getElementById('time').value = now.toTimeString().slice(0, 5);
 }
 
-// Listen for network changes
 window.addEventListener('online', updateSyncUI);
 window.addEventListener('offline', updateSyncUI);
